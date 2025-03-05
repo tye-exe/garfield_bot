@@ -1,12 +1,15 @@
+use std::str::FromStr;
+
 use anyhow::anyhow;
+use chrono::{DateTime, Datelike, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
 use scraper::{Element, ElementRef, Html, Selector, selector::CssLocalName};
 use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 
-async fn get_comic() -> anyhow::Result<String> {
+async fn get_comic(comic_date: NaiveDate) -> anyhow::Result<String> {
     // Format current date
-    let time = chrono::Local::now().format("%Y/%m/%d");
+    let time = comic_date.format("%Y/%m/%d");
 
     // Get html data of garfield data for current day
     let text = reqwest::get(format!("https://www.gocomics.com/garfield/{}", time))
@@ -62,12 +65,26 @@ struct Garfield;
 impl EventHandler for Garfield {
     async fn message(&self, ctx: Context, msg: Message) {
         // Only respond to garfields
-        if msg.content != "!garfield" {
+        if !msg.content.starts_with("!garfield") {
             return;
         }
 
+        // Use local time if none given
+        let time = if msg.content == "!garfield" {
+            chrono::Local::now().date_naive()
+        } else {
+            // Attempt to parse given time
+            match parse_date(&msg.content) {
+                Ok(time) => time,
+                Err(err) => {
+                    send_msg(msg, ctx, format!("Unable to parse date: '{}'", err)).await;
+                    return;
+                }
+            }
+        };
+
         // Get the comic url
-        let url = match get_comic().await {
+        let url = match get_comic(time).await {
             Ok(url) => url,
             Err(err) => {
                 eprintln!("Comic Error: {}", err);
@@ -75,8 +92,8 @@ impl EventHandler for Garfield {
             }
         };
 
-        let time = chrono::Local::now().format("%B %d, %Y");
-        let pretext = format!("Garfield: {time}");
+        let comic_date = time.format("%B %d, %Y");
+        let pretext = format!("Garfield: {comic_date}");
 
         // Send msg saying date beforehand (fancy)
         if let Err(why) = msg.channel_id.say(&ctx.http, pretext).await {
@@ -89,6 +106,23 @@ impl EventHandler for Garfield {
             eprintln!("Error sending message: {why:?}");
         }
     }
+}
+
+async fn send_msg(msg: Message, ctx: Context, text: impl Into<String>) {
+    if let Err(why) = msg.channel_id.say(&ctx.http, text).await {
+        eprintln!("Error sending message: {why:?}");
+    }
+}
+
+fn parse_date(content: &str) -> anyhow::Result<NaiveDate> {
+    let date_text: String = content.chars().skip(10).collect();
+
+    let year: String = date_text.chars().take(4).collect();
+    let month: String = date_text.chars().skip(5).take(2).collect();
+    let day: String = date_text.chars().skip(8).take(2).collect();
+
+    NaiveDate::from_ymd_opt(year.parse()?, month.parse()?, day.parse()?)
+        .ok_or(anyhow!("Invalid date"))
 }
 
 #[tokio::main]
