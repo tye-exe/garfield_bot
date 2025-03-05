@@ -51,6 +51,10 @@ impl EventHandler for Pinger {
             return;
         }
 
+        if msg.author.bot {
+            return;
+        }
+
         send_msg(&msg, &ctx, "Pong!").await;
     }
 }
@@ -62,6 +66,10 @@ impl EventHandler for Garfield {
     async fn message(&self, ctx: Context, msg: Message) {
         // Only respond to garfields
         if !msg.content.starts_with("!garfield") {
+            return;
+        }
+
+        if msg.author.bot {
             return;
         }
 
@@ -124,6 +132,10 @@ struct Help;
 impl EventHandler for Help {
     async fn message(&self, ctx: Context, msg: Message) {
         if msg.content != "!help" {
+            return;
+        }
+
+        if msg.author.bot {
             return;
         }
 
