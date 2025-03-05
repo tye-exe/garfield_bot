@@ -138,8 +138,7 @@ impl EventHandler for Help {
 #[tokio::main]
 async fn main() {
     // Login with a bot token from the environment
-    // let token = env::var("DISCORD_TOKEN").expect("Expected a token in the environment");
-    let token = std::fs::read_to_string(".env").expect("Cannot read token");
+    let token = std::fs::read_to_string(".key").expect("Cannot read token");
     // Set gateway intents, which decides what events the bot will be notified about
     let intents = GatewayIntents::GUILD_MESSAGES
         | GatewayIntents::DIRECT_MESSAGES
