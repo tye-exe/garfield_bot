@@ -47,7 +47,7 @@ struct Pinger;
 #[async_trait]
 impl EventHandler for Pinger {
     async fn message(&self, ctx: Context, msg: Message) {
-        if msg.content != "!ping" {
+        if msg.content.to_ascii_lowercase() != "!ping" {
             return;
         }
 
@@ -65,7 +65,7 @@ struct Garfield;
 impl EventHandler for Garfield {
     async fn message(&self, ctx: Context, msg: Message) {
         // Only respond to garfields
-        if !msg.content.starts_with("!garfield") {
+        if !msg.content.to_ascii_lowercase().starts_with("!garfield") {
             return;
         }
 
@@ -131,7 +131,7 @@ struct Help;
 #[async_trait]
 impl EventHandler for Help {
     async fn message(&self, ctx: Context, msg: Message) {
-        if msg.content != "!help" {
+        if msg.content.to_ascii_lowercase() != "!help" {
             return;
         }
 
