@@ -1,0 +1,5 @@
+# Build artefacts
+target
+.git
+# Nix artefacts
+.direnv

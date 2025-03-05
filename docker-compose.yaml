@@ -1,0 +1,5 @@
+services:
+  garfield:
+    container_name: garfield
+    build: .
+    restart: unless-stopped
