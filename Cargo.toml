@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.97"
 chrono = "0.4.40"
+poise = "0.6.1"
 reqwest = "0.12.12"
 scraper = "0.23.1"
 serenity = "0.12.4"
