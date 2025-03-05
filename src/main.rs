@@ -1,8 +1,6 @@
-use std::str::FromStr;
-
 use anyhow::anyhow;
-use chrono::{DateTime, Datelike, Local, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
-use scraper::{Element, ElementRef, Html, Selector, selector::CssLocalName};
+use chrono::NaiveDate;
+use scraper::{Element, Html, Selector};
 use serenity::async_trait;
 use serenity::model::channel::Message;
 use serenity::prelude::*;
@@ -53,9 +51,7 @@ impl EventHandler for Pinger {
             return;
         }
 
-        if let Err(why) = msg.channel_id.say(&ctx.http, "Pong!").await {
-            eprintln!("Error sending message: {why:?}");
-        }
+        send_msg(&msg, &ctx, "Pong!").await;
     }
 }
 
@@ -77,7 +73,7 @@ impl EventHandler for Garfield {
             match parse_date(&msg.content) {
                 Ok(time) => time,
                 Err(err) => {
-                    send_msg(msg, ctx, format!("Unable to parse date: '{}'", err)).await;
+                    send_msg(&msg, &ctx, format!("Unable to parse date: '{}'", err)).await;
                     return;
                 }
             }
@@ -88,6 +84,7 @@ impl EventHandler for Garfield {
             Ok(url) => url,
             Err(err) => {
                 eprintln!("Comic Error: {}", err);
+                send_msg(&msg, &ctx, format!("Commic Error: {}", err)).await;
                 return;
             }
         };
@@ -96,19 +93,15 @@ impl EventHandler for Garfield {
         let pretext = format!("Garfield: {comic_date}");
 
         // Send msg saying date beforehand (fancy)
-        if let Err(why) = msg.channel_id.say(&ctx.http, pretext).await {
-            eprintln!("Error sending message: {why:?}");
-        }
+        send_msg(&msg, &ctx, pretext).await;
 
         // Send the comic url.
         // Discord will fetch the image for us (yay!).
-        if let Err(why) = msg.channel_id.say(&ctx.http, url).await {
-            eprintln!("Error sending message: {why:?}");
-        }
+        send_msg(&msg, &ctx, url).await;
     }
 }
 
-async fn send_msg(msg: Message, ctx: Context, text: impl Into<String>) {
+async fn send_msg(msg: &Message, ctx: &Context, text: impl Into<String>) {
     if let Err(why) = msg.channel_id.say(&ctx.http, text).await {
         eprintln!("Error sending message: {why:?}");
     }
