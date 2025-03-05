@@ -125,6 +125,23 @@ fn parse_date(content: &str) -> anyhow::Result<NaiveDate> {
         .ok_or(anyhow!("Invalid date"))
 }
 
+struct Help;
+
+#[async_trait]
+impl EventHandler for Help {
+    async fn message(&self, ctx: Context, msg: Message) {
+        if msg.content != "!help" {
+            return;
+        }
+
+        let help_text = "Garfield help:\n!ping - The bot will respond with a pong\n!garfield - The current garfield commic for today\n!garfield <2024-02-01> - The garfield strip at the given date\n!help - This message";
+
+        if let Err(why) = msg.channel_id.say(&ctx.http, help_text).await {
+            eprintln!("Error sending message: {why:?}");
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() {
     // Login with a bot token from the environment
@@ -139,6 +156,7 @@ async fn main() {
     let mut client = Client::builder(&token, intents)
         .event_handler(Pinger)
         .event_handler(Garfield)
+        .event_handler(Help)
         .await
         .expect("Err creating client");
 
