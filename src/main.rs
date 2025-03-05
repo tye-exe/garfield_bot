@@ -127,7 +127,7 @@ impl EventHandler for Help {
             return;
         }
 
-        let help_text = "Garfield help:\n!ping - The bot will respond with a pong\n!garfield - The current garfield commic for today\n!garfield <2024-02-01> - The garfield strip at the given date\n!help - This message";
+        let help_text = "Garfield help:\n!ping - The bot will respond with a pong\n!garfield - The current garfield commic for today\n!garfield 2024-02-01 - The garfield strip at the given date\n!help - This message";
 
         if let Err(why) = msg.channel_id.say(&ctx.http, help_text).await {
             eprintln!("Error sending message: {why:?}");
