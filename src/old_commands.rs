@@ -56,7 +56,7 @@ impl EventHandler for Garfield {
             Ok(url) => url,
             Err(err) => {
                 eprintln!("Comic Error: {}", err);
-                send_msg(&msg, &ctx, format!("Commic Error: {}", err)).await;
+                send_msg(&msg, &ctx, format!("Comic Error: {}", err)).await;
                 return;
             }
         };
