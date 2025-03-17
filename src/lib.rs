@@ -5,20 +5,22 @@ use chrono::NaiveDate;
 use scraper::{Html, Selector};
 
 pub async fn get_comic(comic_date: NaiveDate) -> anyhow::Result<String> {
-    // Format current date
-    let time = comic_date.format("%Y%m%d");
+    // Format date as YYYY/MM/DD (GoComics uses this format for URLs)
+    let time = comic_date.format("%Y/%m/%d").to_string();
 
-    // Get html data of garfield data for current day
-    let text = reqwest::get(format!("https://www.mezzacotta.net/garfield/?date={}", time))
+    // Get HTML data of Garfield comic from GoComics for the specific date
+    let text = reqwest::get(format!("https://www.gocomics.com/garfield/{}", time))
         .await?
         .text()
         .await?;
 
     // Set up parsing data structures
     let html_data = Html::parse_document(&text);
-    let selector = Selector::parse("p img").map_err(|_| anyhow!("Cannot parse 'p img' from the returned HTML"))?;
+    
+    // Use a selector to find the 'img' tag inside the 'picture' element with class 'item-comic-image'
+    let selector = Selector::parse("picture.item-comic-image img").map_err(|_| anyhow!("Cannot parse 'img' selector"))?;
 
-    // Parse comic image url from html data
+    // Attempt to find the image tag and extract its src attribute
     let comic_url = html_data
         .select(&selector)
         .next()
@@ -27,7 +29,7 @@ pub async fn get_comic(comic_date: NaiveDate) -> anyhow::Result<String> {
         .attr("src")
         .ok_or(anyhow!("Could not extract 'src' attribute from comic image"))?;
 
-    let full_url = format!("https://www.mezzacotta.net{}", comic_url);
+    let full_url = format!("{}", comic_url); // Ensure the URL is properly formed with the full domain
     Ok(full_url)
 }
 
