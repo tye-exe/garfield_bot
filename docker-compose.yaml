@@ -1,5 +1,7 @@
 services:
   garfield:
+    build:
+      context: .
+      network: host
     container_name: garfield
-    build: .
     restart: unless-stopped
