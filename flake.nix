@@ -36,22 +36,6 @@
               openssl
               pkg-config
             ];
-
-            LD_LIBRARY_PATH =
-              let
-                libPath =
-                  with pkgs;
-                  lib.makeLibraryPath [
-                    libGL
-                    libxkbcommon
-                    wayland
-                    xorg.libX11
-                    xorg.libXcursor
-                    xorg.libXi
-                    xorg.libXrandr
-                  ];
-              in
-              libPath;
           };
       }
     );
