@@ -1,3 +1,4 @@
+pub mod heathcliff;
 pub mod old_commands;
 
 use anyhow::anyhow;

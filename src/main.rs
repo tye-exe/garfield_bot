@@ -4,6 +4,7 @@ use anyhow::anyhow;
 use chrono::NaiveDate;
 use garfield_bot::{
     get_comic,
+    heathcliff::get_heathcliff,
     old_commands::{Garfield, Help, Pinger},
 };
 use poise::CreateReply;
@@ -52,6 +53,45 @@ async fn garfield_message(ctx: Context<'_>, time: NaiveDate) -> Result<(), Error
     Ok(())
 }
 
+/// Gets the garfield comic strip at the given date
+#[poise::command(slash_command, prefix_command)]
+async fn heathcliff_at(
+    ctx: Context<'_>,
+    #[description = "year"] year: i32,
+    #[description = "month"]
+    #[min = 1]
+    #[max = 12]
+    month: u8,
+    #[description = "day"]
+    #[min = 1]
+    #[max = 31]
+    day: u8,
+) -> Result<(), Error> {
+    let time = NaiveDate::from_ymd_opt(year, month as u32, day as u32)
+        .ok_or(anyhow!("Invalid date '{year}-{month}-{day}'!"))?;
+
+    heathcliff_message(ctx, time).await
+}
+
+/// Gets the garfield comic strip for today
+#[poise::command(slash_command, prefix_command)]
+async fn heathcliff(ctx: Context<'_>) -> Result<(), Error> {
+    heathcliff_message(ctx, chrono::Local::now().date_naive()).await
+}
+
+async fn heathcliff_message(ctx: Context<'_>, time: NaiveDate) -> Result<(), Error> {
+    let comic_date = time.format("%B %d, %Y");
+
+    ctx.send(
+        CreateReply::default()
+            .content(format!("Heathclfif: {comic_date}"))
+            .embed(CreateEmbed::new().image(get_heathcliff(time).await?)),
+    )
+    .await?;
+
+    Ok(())
+}
+
 /// Sends a butter to register or deregister slash commands
 #[poise::command(prefix_command)]
 async fn register_commands(ctx: Context<'_>) -> Result<(), Error> {
@@ -67,7 +107,7 @@ async fn register_commands(ctx: Context<'_>) -> Result<(), Error> {
 /// Gets the garfield comic strip for today
 #[poise::command(slash_command, prefix_command)]
 async fn help(ctx: Context<'_>) -> Result<(), Error> {
-    ctx.say("Help:\n/garfield - to get the garfield commic strip of the day\n/garfield_at <year month day> - to get the garfield commic strip for the given date").await?;
+    ctx.say("Help:\n/garfield - to get the garfield commic strip of the day\n/garfield_at <year month day> - to get the garfield commic strip for the given date\n And the same thing for heathcliff, I cba to type it out. You're smart, you've got this!").await?;
     Ok(())
 }
 
@@ -83,7 +123,14 @@ async fn main() {
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
             // Commands
-            commands: vec![garfield(), garfield_at(), register_commands(), help()],
+            commands: vec![
+                garfield(),
+                garfield_at(),
+                heathcliff(),
+                heathcliff_at(),
+                register_commands(),
+                help(),
+            ],
             // Preix options
             prefix_options: poise::PrefixFrameworkOptions {
                 prefix: Some("~".into()),
